@@ -19,6 +19,7 @@ let path = {
 		// css: source_folder + "/scss/styles.scss",
 		css_a: source_folder + "/scss/*.scss",
 		css_b: source_folder + "/css/",
+		css_c: source_folder + "/scss/",
 		// js: source_folder + "/js/scripts.js",
 		js: source_folder + "/js/**/*.js",
 		img: source_folder + "/img/**/*.{jpg,png,svg,gif,ico,webp}",
@@ -114,7 +115,7 @@ function css() {
 		.pipe(dest(path.build.css)) //путь к выходящим css файлам
 
 }
-function cssTask() {
+function scssTask() {
 	return src(path.src.css_a, {}) //путь к исходным css файлам
 		.pipe(plumber())
 		.pipe(sourcemaps.init())
@@ -131,16 +132,13 @@ function cssTask() {
 				cascade: true //стиль написание автопрефикса 
 			}))
 		.pipe(webpcss())
-
 		.pipe(dest(path.src.css_b))
 
-		// .pipe(browsersync.stream()) //синхронизация браузера
-		// .pipe(clean_css())
-		// .pipe(rename({ extname: ".min.css" }))
-		.pipe(sourcemaps.write('.'))   // создание карты css.map в текущей папке
-
-		// .pipe(dest(path.build.css)) //путь к выходящим css файлам
-
+		.pipe(browsersync.stream()) //синхронизация браузера
+		.pipe(clean_css())
+		.pipe(rename({ extname: ".min.css" }))
+		.pipe(sourcemaps.write('.'))   // создание карты css.map в текущей папке	
+		.pipe(dest(path.src.css_b))	
 }
 
 
@@ -365,7 +363,7 @@ let watch_fonts_check = gulp.parallel(fonts_check, watchFiles, browserSync);
 exports.html = html; //срабатывание команды html
 
 exports.css = css; //срабатывание команды css
-exports.cssTask = cssTask; //срабатывание команды css
+exports.scssTask = scssTask; //срабатывание команды css
 
 exports.vnd_css = vnd_css; // запуск команды для обновления css файлов папке vnd 
 
