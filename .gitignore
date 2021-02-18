@@ -1,0 +1,5 @@
+# исключаем node_modules
+/node_modules
+
+# исключаем .vscode
+.vscode 
