@@ -72,6 +72,7 @@ let svgSprite = require('gulp-svg-sprite');
 let plumber = require('gulp-plumber');
 let concat = require('gulp-concat');
 let order = require('gulp-order');
+
 // Шрифты - 
 let ttf2woff = require('gulp-ttf2woff');
 let ttf2woff2 = require('gulp-ttf2woff2');
@@ -79,7 +80,11 @@ let fonter = require('gulp-fonter');
 // Шрифты - переменная для записи и подключения шрифтов к стилям
 let fs = require('fs');
 // const { CLIENT_RENEG_LIMIT } = require('tls'); // ?? не знаю для чего это и как тут появилось??
+//Переменный для flag's
 let $flag_folder;
+let $flag_preloader;
+
+
 // ANCHOR BrowserSync
 function browserSync(done) {
 	browsersync.init({
@@ -162,11 +167,11 @@ async function delCssFolderSrc() {
 
 function vnd_css() {
 	return src(path.src.vnd_css)
-		.pipe(
-			autoprefixer({
-				overrideBrowserslist: ["last 5 versions"], //поддержка версий браузеров
-				cascade: true //стиль написание автопрефикса 
-			}))
+		// .pipe(
+		// 	autoprefixer({
+		// 		overrideBrowserslist: ["last 5 versions"], //поддержка версий браузеров
+		// 		cascade: true //стиль написание автопрефикса 
+		// 	}))
 		.pipe(dest(path.build.vnd_css))
 		.pipe(browsersync.stream()); //синхронизация браузера
 }
@@ -336,21 +341,31 @@ async function fontStyle() {
 function cb() { }
 
 // ANCHOR Сервисные Функции
-// Функция-1.  Очистка папки build 
+// Функция-1.1  Очистка папки build 
 function cleanBuild() {
 	console.log('\n ** Удаление папки ' + path.clean.cleanBuild + ' **\n');
 	return del(path.clean.cleanBuild);
 }
+
+// Функция-1.1  Очистка папки src/fonts-woff 
 function cleanFontsWoff() {
 	console.log('\n ** Удаление папки ' + path.clean.cleanFontsWoff + ' **\n');
 	checkFolder(path.clean.cleanFontsWoff);
 	if ($flag_folder == 5) {
 		return del(path.clean.cleanFontsWoff);
 	}
-	console.log('\n ** Итог: Папки '+ path.clean.cleanFontsWoff + ' Нет!\n Удалять нечего!\n -----\n\n' );
+	console.log('\n ** Итог: Папки ' + path.clean.cleanFontsWoff + ' Нет!\n Удалять нечего!\n -----\n\n');
 }
-exports.cleanFontsWoff = cleanFontsWoff;
-// Функция-2. Очистка Терминала
+
+// Функция-1.2  Очистка папок build/ и src/fonts-woff 
+async function cleanFontsWoffBuild() {
+	console.log('\n ** Удаление папки ' + path.clean.cleanFontsWoff + ' и ' + path.clean.cleanBuild +  '**\n');
+		del(path.clean.cleanFontsWoff);
+		del(path.clean.cleanBuild);
+}
+exports.cleanFontsWoffBuild = cleanFontsWoff_build;
+
+// Функция-3. Очистка Терминала
 async function cleanTerminal() {
 	console.group();
 	for (let i = 0; i < 10; i++) {
@@ -359,21 +374,15 @@ async function cleanTerminal() {
 	console.groupEnd("End ");
 }
 
-// Функция-3. Проверка наличия Папки
+// Функция-4. Проверка наличия Папки
 async function checkFolder(params) {
-	var fs = require('fs');
-	if (fs.existsSync(params)) {
-		console.log('\n*Папка уже' + params + ' Есть\n');
-		$flag_folder = 5;
-		return console.log('\n* Выход из функции-1 *\n');
-	} else {
-		console.log('\n**Такой Папки ' + params + ' Нет\n');
-		$flag_folder = 10;
-		return console.log('\n* Выход из функции-2 *\n');
-	}
-}
+
 // exports.checkFolder = checkFolder;
 
+async function my_preloader(params) {
+
+	}
+}
 
 // ANCHOR Watcher
 //Отслеживание файлов для синхронизации
@@ -429,7 +438,8 @@ exports.f_ttf2woff = f_ttf2woff; //запуск команды для шрифт
 exports.includeFonts = includeFonts; //запуск команды подключение шрифтов
 exports.woff2build = woff2build;
 // Сервисные
-exports.cleanBuild = cleanBuild; //запуск удаления директории - build
+exports.cleanBuild = cleanBuild; // запуск удаления директории - build
+exports.cleanFontsWoff = cleanFontsWoff; // запуск удаления директории - src/fonts-woff
 exports.cleanFontsWoff = cleanFontsWoff;
 exports.cleanTerminal = cleanTerminal; // Очистка - Терминала
 // Команды 
@@ -454,10 +464,25 @@ exports.debug_var = debug_var;
 
 
 async function debug_path() {
-	let h = path.src.f_woffDest;
-	let p = checkFolder(path.src.f_woffDest);
-	console.log(h);
-	console.log(p);
+	// let h = path.src.f_woffDest;
+	// let p = checkFolder(path.src.f_woffDest);
+	// p.resume();
+	// console.log(h);
+	// console.log(p);
+
+	return src(path.src.f_ttf2woff)
+		.pipe(ttf2woff2())
+	// .pipe(loader.on('progress', function (progress) {
+	// 	console.log(progress);
+	// }))
+		// .pipe(preloader({
+		// 	// По-умолчанию: Loading application... Please wait
+		// 	msg: "Сообщение при загрузке страницы"
+		// }))
+		.on('finish', () =>
+			console.log('Data was written.')
+		)
+		.pipe(dest(path.src.f_woffDest));
 
 }
 exports.debug_path = debug_path;
