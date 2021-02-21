@@ -4,5 +4,6 @@ a {
 }
 
 div {
-  display: grid;
+  background-color: rgb(41, 185, 106);
+  font-weight: lighter;
 }
