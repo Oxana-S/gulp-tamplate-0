@@ -1,3 +1,4 @@
+// Commit-4
 //Этот файл содержит логику работы всей сборки проекта
 let project_folder = "build"; //Переменная для папки результата проекта, выгружается на сервер и передается заказчику
 let source_folder = "src"; //Переменная для папки с исходниками проекта, рабочая папка используется только нами при разработке
@@ -24,6 +25,7 @@ let path = {
 		// js: source_folder + "/js/scripts.js",
 		jsTask: source_folder + "/js/**/*.js",
 		img: source_folder + "/img/**/*.{jpg,png,svg,gif,ico,webp}",
+		f_scss_fonts: source_folder + '/scss/_fonts.scss',
 		f_ttf2woff: source_folder + "/fonts/*.ttf",
 		f_woffSrc: source_folder + "/fonts-woff/*.*",
 		f_woffDest: source_folder + "/fonts-woff/",
@@ -40,6 +42,7 @@ let path = {
 		img: source_folder + "/img/**/*.{jpg,png,svg,gif,ico,webp}",
 		vnd_css: source_folder + "/scss/vnd/**/*.css", // добавил пути для слежения за изменениями файлов в папке scss/vnd
 		vnd_js: source_folder + "/js/vnd/**/*.js", // добавил пути для слежения за изменениями файлов в папке js/vnd
+		f_scss_fonts: source_folder + '/scss/_fonts.scss',
 		f_ttf2woff: source_folder + "/fonts/*.ttf" // добавил пути для слежения за изменениями файлов шрифтов в папке fonts/
 
 	},
@@ -80,6 +83,14 @@ let fonter = require('gulp-fonter');
 // Шрифты - переменная для записи и подключения шрифтов к стилям
 let fs = require('fs');
 // const { CLIENT_RENEG_LIMIT } = require('tls'); // ?? не знаю для чего это и как тут появилось??
+
+// Сервисные Плагины
+let duration = require('gulp-duration'); //показывает время выполнения Задачи 
+//.pipe(duration('здесь_задача time')) // Например задачи ttf2woff2
+let through = require('gulp-through');
+
+
+
 //Переменный для flag's
 let $flag_folder;
 let $flag_preloader;
@@ -132,7 +143,7 @@ function cssTask() {
 			"vnd/**/*.css",
 			"libs/**/*.css"
 		]))
-		.pipe(concat("vnd-lib.css"))
+		.pipe(concat("vndLib.css"))
 		.pipe(sourcemaps.write())
 		.pipe(dest(path.src.cssTaskDest))
 }
@@ -142,7 +153,7 @@ function scssCssTask() {
 		.pipe(plumber())
 		.pipe(sourcemaps.init())
 		.pipe(order([
-			"vnd-lib.css",
+			"vndLib.css",
 			"style.css",
 		]))
 		.pipe(concat("styles.css"))
@@ -311,10 +322,12 @@ async function includeFonts() {
 // Шрифты - Прописывает шрифты в файл стилей в build/ Использует миксин (см. _mixin.scss) 
 async function fontStyle() {
 	console.log('\n Закончился процесс конвертации ttf файлов в woff и woff2 \n');
-	let file_content = fs.readFileSync(source_folder + '/scss/_fonts.scss');
+	// let file_content = fs.readFileSync(source_folder + '/scss/_fonts.scss');
+	let file_content = fs.readFileSync(path.src.f_scss_fonts);
 	if (file_content == '') {
 		console.log('\n Файл _fonts.scss - Пустой, Процесс пошел!');
-		fs.writeFile(source_folder + '/scss/_fonts.scss', '', cb);
+		// fs.writeFile(source_folder + '/scss/_fonts.scss', '', cb);
+		fs.writeFile(path.src.f_scss_fonts, '', cb);
 		return fs.readdir(path.build.fonts, function (err, items) { // здесь путь куда пишутся стили Шрифтов 
 			if (items) {
 				let c_fontname;
@@ -324,7 +337,8 @@ async function fontStyle() {
 					let fontname = items[i].split('.');
 					fontname = fontname[0];
 					if (c_fontname != fontname) {
-						fs.appendFile(source_folder + '/scss/_fonts.scss', '@include font("' + fontname + '", "' + fontname + '", "400", "normal");\r\n', cb);
+						// fs.appendFile(source_folder + '/scss/_fonts.scss', '@include font("' + fontname + '", "' + fontname + '", "400", "normal");\r\n', cb);
+						fs.appendFile(path.src.f_scss_fonts, '@include font("' + fontname + '", "' + fontname + '", "400", "normal");\r\n', cb);
 					}
 					c_fontname = fontname;
 					console.log('\n Шрифт № ' + i + ' обработан, осталось ' + $numbers_fonts--);
@@ -359,13 +373,13 @@ function cleanFontsWoff() {
 
 // Функция-1.2  Очистка папок build/ и src/fonts-woff 
 async function cleanFontsWoffBuild() {
-	console.log('\n ** Удаление папки ' + path.clean.cleanFontsWoff + ' и ' + path.clean.cleanBuild +  '**\n');
-		del(path.clean.cleanFontsWoff);
-		del(path.clean.cleanBuild);
+	console.log('\n ** Удаление папки ' + path.clean.cleanFontsWoff + ' и ' + path.clean.cleanBuild + '**\n');
+	del(path.clean.cleanFontsWoff);
+	del(path.clean.cleanBuild);
 }
-exports.cleanFontsWoffBuild = cleanFontsWoff_build;
+exports.cleanFontsWoffBuild = cleanFontsWoffBuild;
 
-// Функция-3. Очистка Терминала
+// Функция-2. Очистка Терминала
 async function cleanTerminal() {
 	console.group();
 	for (let i = 0; i < 10; i++) {
@@ -374,15 +388,23 @@ async function cleanTerminal() {
 	console.groupEnd("End ");
 }
 
-// Функция-4. Проверка наличия Папки
+// Функция-3. Проверка наличия Папки
 async function checkFolder(params) {
-
-// exports.checkFolder = checkFolder;
-
-async function my_preloader(params) {
-
+	var fs = require('fs');
+	if (fs.existsSync(params)) {
+		console.log('\n*Папка уже' + params + ' Есть\n');
+		$flag_folder = 5;
+		return console.log('\n* Выход из функции-1 *\n');
+	} else {
+		console.log('\n**Такой Папки ' + params + ' Нет\n');
+		$flag_folder = 10;
+		return console.log('\n* Выход из функции-2 *\n');
 	}
 }
+// exports.checkFolder = checkFolder;
+
+
+
 
 // ANCHOR Watcher
 //Отслеживание файлов для синхронизации
@@ -414,7 +436,7 @@ let watch_production = gulp.parallel(production, watchFiles, browserSync);
 // только для проверки подключения Шрифтов
 let fonts_check = gulp.series(cleanBuild, gulp.parallel(series(scssTask, cssTask, scssCssTask), jsTask, html, f_ttf2woff), delCssFolderSrc, fontStyle);
 // let fonts_check = gulp.series(clean, gulp.parallel(series(scssTask, cssTask, scssCssTask), html));
-let watch_fonts_check = gulp.parallel(fonts_check, watchFiles, browserSync);
+let watch_test = gulp.parallel(fonts_check, watchFiles, browserSync);
 
 
 // ANCHOR EXPORTS
@@ -453,39 +475,48 @@ exports.watch_production = watch_production; //
 exports.default = watch_develop; //запуск gulp который по умолчанию перенаправляет на срабатывание watch
 // Проверка работы с шрифтами:
 exports.fonts_check = fonts_check;
-exports.watch_fonts_check = watch_fonts_check;
+exports.watch_test = watch_test;
 
 //Проверочные и Отладочные функции:
-
-async function debug_var() {
-	console.log('\n* params *\n');
+// Проверить Переменную
+async function debug_var(params) {
+	console.log('\n*' + params + '*\n');
 }
 exports.debug_var = debug_var;
 
-
+// Проверить Пути 
 async function debug_path() {
-	// let h = path.src.f_woffDest;
-	// let p = checkFolder(path.src.f_woffDest);
-	// p.resume();
-	// console.log(h);
-	// console.log(p);
-
-	return src(path.src.f_ttf2woff)
-		.pipe(ttf2woff2())
-	// .pipe(loader.on('progress', function (progress) {
-	// 	console.log(progress);
-	// }))
-		// .pipe(preloader({
-		// 	// По-умолчанию: Loading application... Please wait
-		// 	msg: "Сообщение при загрузке страницы"
-		// }))
-		.on('finish', () =>
-			console.log('Data was written.')
-		)
-		.pipe(dest(path.src.f_woffDest));
-
+	let h = path.src.f_woffDest;
+	let p = checkFolder(path.src.f_woffDest);
+	console.log(h);
+	console.log(p);
 }
 exports.debug_path = debug_path;
 
+// Визуальный лоадер загрузки, пока не понял как применять
+function twirlTimer() {
+	var P = ["\\", "|", "/", "-"];
+	var x = 0;
+	return setInterval(function () {
+		process.stdout.write("\r" + P[x++]);
+		x &= 3;
+	}, 250);
+}
+exports.twirlTimer = twirlTimer;
 
+// Тестировал duration() и .on()
+async function my_duration() {
+
+	return src(path.src.f_ttf2woff)
+		.pipe(ttf2woff2())
+		.on('finish', function () {
+			$flag_preloader = 20;
+			console.log('Шрифты конвертированы в woff и woff2 и перемещены в папку: ' + path.src.f_woffDest + ' Флаг: ' + $flag_preloader)
+		})
+		.pipe(dest(path.src.f_woffDest))
+		.pipe(duration('ttf2woff2 time'))
+}
+
+
+exports.my_duration = my_duration;
 
