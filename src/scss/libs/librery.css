@@ -1,9 +1,9 @@
 /* lib/library.css */
 a {
-  /* text-emphasis: none; */
+  text-emphasis: none;
 }
 
 div {
-  background-color: #afc017;
-  font-weight: lighter;
+  background-color: #58d3a0;
+  /* font-weight: lighter; */
 }

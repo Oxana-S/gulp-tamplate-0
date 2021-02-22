@@ -1,4 +1,5 @@
-// Commit-4
+/* Ветка-cssTask-2, Commit-5 */
+//
 //Этот файл содержит логику работы всей сборки проекта
 let project_folder = "build"; //Переменная для папки результата проекта, выгружается на сервер и передается заказчику
 let source_folder = "src"; //Переменная для папки с исходниками проекта, рабочая папка используется только нами при разработке
@@ -48,7 +49,8 @@ let path = {
 	},
 	clean: {
 		cleanBuild: "./" + "build",
-		cleanFontsWoff: source_folder + "/fonts-woff" //пути для команды очистки 
+		cleanFontsWoff: source_folder + "/fonts-woff", //пути для команды очистки 
+		cleanSrsCss: source_folder + "/css"
 	}
 }
 
@@ -75,7 +77,6 @@ let svgSprite = require('gulp-svg-sprite');
 let plumber = require('gulp-plumber');
 let concat = require('gulp-concat');
 let order = require('gulp-order');
-
 // Шрифты - 
 let ttf2woff = require('gulp-ttf2woff');
 let ttf2woff2 = require('gulp-ttf2woff2');
@@ -88,6 +89,7 @@ let fs = require('fs');
 let duration = require('gulp-duration'); //показывает время выполнения Задачи 
 //.pipe(duration('здесь_задача time')) // Например задачи ttf2woff2
 let through = require('gulp-through');
+let newer = require('gulp-newer');
 
 
 
@@ -98,6 +100,7 @@ let $flag_preloader;
 
 // ANCHOR BrowserSync
 function browserSync(done) {
+	console.log('\n Работает: browserSync()..\n  \n');
 	browsersync.init({
 		server: {
 			baseDir: "./" + project_folder + "/" //указываем папку запуска файлов (то от куда будут запускаться исходные файлы)
@@ -111,6 +114,7 @@ function browserSync(done) {
 // *Общедоступные задачи:
 // ANCHOR HTML 
 function html() {
+	console.log('\n Работает: html()..\n  \n');
 	return src(path.src.html) //путь к исходным html файлам
 		.pipe(fileinclude()) //обращаемся к fileinclude
 		.pipe(webphtml()) //формирование путей к webp
@@ -121,6 +125,7 @@ function html() {
 
 // ANCHOR SCSS и CSS 
 function scssTask() {
+	console.log('\n Работает: scssTask()..\n  \n');
 	return src(path.src.scssTask, {}) //путь к исходным scss файлам
 		.pipe(plumber())
 		.pipe(sourcemaps.init())
@@ -136,6 +141,7 @@ function scssTask() {
 }
 
 function cssTask() {
+	console.log('\n Работает: cssTask()..\n  \n');
 	return src(path.src.cssTaskSrc, {}) //путь к исходным css файлам
 		.pipe(sourcemaps.init())
 		.pipe(order([
@@ -149,6 +155,7 @@ function cssTask() {
 }
 
 function scssCssTask() {
+	console.log('\n Работает: scssCssTask()..\n  \n');
 	return src(path.src.scssCssTaskSrc, {}) //путь к исходным css файлам
 		.pipe(plumber())
 		.pipe(sourcemaps.init())
@@ -172,8 +179,9 @@ function scssCssTask() {
 
 }
 
-async function delCssFolderSrc() {
-	del(path.src.cssTaskDest);
+async function delSrsCss() {
+	console.log('\n Работает: delSrsCss()..\n  \n');
+	del(path.clean.cleanSrsCss);
 }
 
 function vnd_css() {
@@ -189,6 +197,7 @@ function vnd_css() {
 
 // ANCHOR JS
 function jsTask() {
+	console.log('\n Работает: jsTask()..\n  \n');
 	return src(path.src.jsTask)
 		.pipe(sourcemaps.init())
 		.pipe(order([
@@ -219,15 +228,18 @@ function vnd_js() {
 
 // ANCHOR IMG
 function img() {
+	console.log('\n Работает: img()..\n  \n');
 	return src(path.src.img) //путь к исходным img файлам
+		.pipe(newer(path.build.img))
 		.pipe(
 			webp({
 				quality: 70
 			})
 		)
 		.pipe(dest(path.build.img))
-		.pipe(src(path.src.img))
 
+		.pipe(src(path.src.img))
+		.pipe(newer(path.build.img))
 		.pipe(
 			imagemin({
 				progressive: true,
@@ -240,23 +252,10 @@ function img() {
 		.pipe(browsersync.stream()) //синхронизация браузера
 }
 
-//* Частная Задача. svgSprite - отдельная задача (ЕСЛИ есть необходимость) для svg спрайтов
-gulp.task('svgSprite', function () {
-	return gulp.src([source_folder + '/iconsprite/*.svg'])
-		.pipe(svgSprite({
-			mode: {
-				stack: {
-					sprite: "../iconsprite/icons.svg",
-					example: true
-				}
-			},
-		}
-		))
-		.pipe(dest(path.build.img))
-})
 
 // ANCHOR FONTS -  Шрифты - Конвертация ttf в woff
 async function f_ttf2woff(params) {
+	console.log('\n Работает: f_ttf2woff()..\n  \n');
 	checkFolder(path.src.f_woffDest);
 	console.log($flag_folder);
 	if ($flag_folder == 5) {
@@ -280,6 +279,7 @@ async function f_ttf2woff(params) {
 }
 // Функция копирования woff шрифтов из папки src/fonts-woff в папку build/ 
 async function woff2build() {
+	console.log('\n Работает: woff2build()..\n  \n');
 	checkFolder(path.src.f_woffDest);
 	if ($flag_folder == 5) {
 		let $tr = src(path.src.f_woffSrc)
@@ -290,38 +290,9 @@ async function woff2build() {
 		console.log('\n ***Шрифты из папки: ' + path.src.f_woffSrc + '\n НЕ скопированы в папку: ' + path.build.fonts + '\n *****Почему?');
 	}
 }
-
-//* Частная Задача. Шрифты - отдельная задача (ЕСЛИ есть необходимость) для конвертации otf в ttf
-gulp.task('otf2ttf', function () {
-	return src([source_folder + '/fonts/*.otf'])
-		.pipe(fonter({
-			formats: ['ttf']
-		}))
-		.pipe(dest(source_folder + '/fonts/'));
-})
-
-// Не Использую эту функцию !!! 
-//Шрифты - Для подключение шрифтов 
-async function includeFonts() {
-	return fs.readdir(path.build.fonts, 'utf8', (error, fontFiles) => {
-		let pluggableFonts = '';
-		const addedFonts = new Set();
-		for (let fontFile of fontFiles) {
-			const fontName = fontFile.split('.')[0];
-			if (!addedFonts.has(fontName)) {
-				pluggableFonts += '@include font("' + fontName + '", "' + fontName + '", "400", "normal");\r\n';
-				addedFonts.add(fontName);
-			}
-		}
-		fs.writeFile(source_folder + '/scss/_fonts.scss', pluggableFonts, () => { });
-	});
-}
-
-
-
 // Шрифты - Прописывает шрифты в файл стилей в build/ Использует миксин (см. _mixin.scss) 
 async function fontStyle() {
-	console.log('\n Закончился процесс конвертации ttf файлов в woff и woff2 \n');
+	console.log('\n Работает: fontStyle()..\n Закончился процесс конвертации ttf файлов в woff и woff2 \n');
 	// let file_content = fs.readFileSync(source_folder + '/scss/_fonts.scss');
 	let file_content = fs.readFileSync(path.src.f_scss_fonts);
 	if (file_content == '') {
@@ -350,19 +321,47 @@ async function fontStyle() {
 		console.log('\n_fonts.scss - Не пустой, удалить всё содержимое\n');
 	}
 }
-
 // Шрифты - функция call back, нужна для подключения шрифтов в файл со стилями для fontStyle() . Просто функция с названием.
 function cb() { }
+
+//ANCHOR Частные Задачи:
+// Частная Задача-1. svgSprite - отдельная задача (ЕСЛИ есть необходимость) для svg спрайтов
+gulp.task('svgSprite', function () {
+	console.log('\n Работает: svgSprite()..\n  \n');
+	return gulp.src([source_folder + '/iconsprite/*.svg'])
+		.pipe(svgSprite({
+			mode: {
+				stack: {
+					sprite: "../iconsprite/icons.svg",
+					example: true
+				}
+			},
+		}
+		))
+		.pipe(dest(path.build.img))
+})
+// Частная Задача-2. Шрифты - отдельная задача (ЕСЛИ есть необходимость) для конвертации otf в ttf
+gulp.task('otf2ttf', function () {
+	console.log('\n Работает: otf2ttf()..\n  \n');
+	return src([source_folder + '/fonts/*.otf'])
+		.pipe(fonter({
+			formats: ['ttf']
+		}))
+		.pipe(dest(source_folder + '/fonts/'));
+})
+
 
 // ANCHOR Сервисные Функции
 // Функция-1.1  Очистка папки build 
 function cleanBuild() {
+	console.log('\n Работает: cleanBuild()..\n  \n');
 	console.log('\n ** Удаление папки ' + path.clean.cleanBuild + ' **\n');
 	return del(path.clean.cleanBuild);
 }
 
 // Функция-1.1  Очистка папки src/fonts-woff 
 function cleanFontsWoff() {
+	console.log('\n Работает: cleanFontsWoff()..\n  \n');
 	console.log('\n ** Удаление папки ' + path.clean.cleanFontsWoff + ' **\n');
 	checkFolder(path.clean.cleanFontsWoff);
 	if ($flag_folder == 5) {
@@ -372,12 +371,13 @@ function cleanFontsWoff() {
 }
 
 // Функция-1.2  Очистка папок build/ и src/fonts-woff 
-async function cleanFontsWoffBuild() {
+async function clean() {
+	console.log('\n Работает: clean()..\n  \n');
 	console.log('\n ** Удаление папки ' + path.clean.cleanFontsWoff + ' и ' + path.clean.cleanBuild + '**\n');
 	del(path.clean.cleanFontsWoff);
 	del(path.clean.cleanBuild);
 }
-exports.cleanFontsWoffBuild = cleanFontsWoffBuild;
+exports.clean = clean;
 
 // Функция-2. Очистка Терминала
 async function cleanTerminal() {
@@ -390,6 +390,7 @@ async function cleanTerminal() {
 
 // Функция-3. Проверка наличия Папки
 async function checkFolder(params) {
+	console.log('\n Работает: checkFolder()..\n  \n');
 	var fs = require('fs');
 	if (fs.existsSync(params)) {
 		console.log('\n*Папка уже' + params + ' Есть\n');
@@ -402,8 +403,6 @@ async function checkFolder(params) {
 	}
 }
 // exports.checkFolder = checkFolder;
-
-
 
 
 // ANCHOR Watcher
@@ -425,7 +424,7 @@ function watchFiles() {
 
 // ANCHOR Команды для запуска:
 // build 
-let build = gulp.series(cleanBuild, gulp.parallel(jsTask, html, img, f_ttf2woff, vnd_js, vnd_css), includeFonts, fontStyle);
+let build = gulp.series(cleanBuild, gulp.parallel(jsTask, html, img, f_ttf2woff, vnd_js, vnd_css), fontStyle);
 let watch_build = gulp.parallel(build, watchFiles, browserSync);
 // develop - для работы, чтобы время не тратить на шрифты и картинки, watch долго запускается 
 let develop = gulp.series(cleanBuild, gulp.parallel(jsTask, html, vnd_js, vnd_css));
@@ -434,7 +433,7 @@ let watch_develop = gulp.parallel(develop, watchFiles, browserSync);
 let production = gulp.series(cleanBuild, gulp.parallel(jsTask, html, vnd_js, vnd_css));
 let watch_production = gulp.parallel(production, watchFiles, browserSync);
 // только для проверки подключения Шрифтов
-let fonts_check = gulp.series(cleanBuild, gulp.parallel(series(scssTask, cssTask, scssCssTask), jsTask, html, f_ttf2woff), delCssFolderSrc, fontStyle);
+let fonts_check = gulp.series(cleanBuild, gulp.parallel(series(scssTask, cssTask, scssCssTask), jsTask, html, img, f_ttf2woff), delSrsCss, fontStyle);
 // let fonts_check = gulp.series(clean, gulp.parallel(series(scssTask, cssTask, scssCssTask), html));
 let watch_test = gulp.parallel(fonts_check, watchFiles, browserSync);
 
@@ -447,7 +446,7 @@ exports.scssTask = scssTask; // Объединение scss файлов в ко
 exports.cssTask = cssTask; // Объединение css файлов в папках: libs/ и vnd/ css
 exports.scssCssTask = scssCssTask; // Объединение всех css файлов в созданной для этого папке src/css
 exports.vnd_css = vnd_css; // запуск команды для обновления css файлов папке vnd 
-exports.delCssFolderSrc = delCssFolderSrc; // удаление папки src/css после переноса стилей в build  
+exports.delSrsCss = delSrsCss; // удаление папки src/css после переноса стилей в build  
 //js
 exports.jsTask = jsTask; //срабатывание команды js
 exports.vnd_js = vnd_js; // запуск команды для обновления js файлов папке vnd 
@@ -457,7 +456,6 @@ exports.img = img; //срабатывание команды img
 // fonts
 exports.fontStyle = fontStyle; //запуск команды подключение шрифтов в файл стилей
 exports.f_ttf2woff = f_ttf2woff; //запуск команды для шрифтов
-exports.includeFonts = includeFonts; //запуск команды подключение шрифтов
 exports.woff2build = woff2build;
 // Сервисные
 exports.cleanBuild = cleanBuild; // запуск удаления директории - build
@@ -516,7 +514,65 @@ async function my_duration() {
 		.pipe(dest(path.src.f_woffDest))
 		.pipe(duration('ttf2woff2 time'))
 }
-
-
 exports.my_duration = my_duration;
+
+
+/*------------------------------------------*/
+/*Старая логика обработки scss и css файлов */
+// Old: SCSS и CSS
+// function scssTask() {
+// 	return src(path.src.scssTask, {}) //путь к исходным scss файлам
+// 		.pipe(plumber())
+// 		.pipe(sourcemaps.init())
+// 		.pipe(
+// 			scss({
+// 				outputStyle: "expanded" //формирование развернутого файла
+// 			}).on('error', scss.logError)
+// 		)
+// 		.pipe(group_media())
+// 		.pipe(webpcss())
+// 		.pipe(sourcemaps.write())
+// 		.pipe(dest(path.src.cssTaskDest))
+// }
+
+// function cssTask() {
+// 	return src(path.src.cssTaskSrc, {}) //путь к исходным css файлам
+// 		.pipe(sourcemaps.init())
+// 		.pipe(order([
+// 			"vnd/jquery/*.css",
+// 			"vnd/**/*.css",
+// 			"libs/**/*.css"
+// 		]))
+// 		.pipe(concat("vndLib.css"))
+// 		.pipe(sourcemaps.write())
+// 		.pipe(dest(path.src.cssTaskDest))
+// }
+
+// function scssCssTask() {
+// 	return src(path.src.scssCssTaskSrc, {}) //путь к исходным css файлам
+// 		.pipe(plumber())
+// 		.pipe(sourcemaps.init())
+// 		.pipe(order([
+// 			"vndLib.css",
+// 			"style.css",
+// 		]))
+// 		.pipe(concat("styles.css"))
+// 		.pipe(
+// 			autoprefixer({
+// 				grid: true,
+// 				overrideBrowserslist: ["last 5 versions"], //поддержка версий браузеров
+// 				cascade: true //стиль написание автопрефикса 
+// 			}))
+// 		.pipe(dest(path.build.css))
+// 		.pipe(browsersync.stream()) //синхронизация браузера
+// 		.pipe(clean_css())
+// 		.pipe(rename({ extname: ".min.css" }))
+// 		.pipe(sourcemaps.write())
+// 		.pipe(dest(path.build.css))
+
+// }
+
+// async function deSrcCss() {
+// 	del(path.clean.cleanSrsCss);
+// }
 
