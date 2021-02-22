@@ -10,8 +10,8 @@ let path = {
 		html: project_folder + "/",
 		css: project_folder + "/css/",
 		js: project_folder + "/js/",
-		img: project_folder + "/img/",
-		fonts: project_folder + "/fonts/",
+		img: project_folder + "/assets/img/",
+		fonts: project_folder + "/assets/fonts/",
 		vnd_js: project_folder + "/js/vnd/",
 		vnd_css: project_folder + "/css/vnd/"
 	},
@@ -25,11 +25,11 @@ let path = {
 		scssCssTaskSrc: source_folder + "/css/*.css",
 		// js: source_folder + "/js/scripts.js",
 		jsTask: source_folder + "/js/**/*.js",
-		img: source_folder + "/img/**/*.{jpg,png,svg,gif,ico,webp}",
+		img: source_folder + "/assets/img/**/*.{jpg,png,svg,gif,ico,webp}",
 		f_scss_fonts: source_folder + '/scss/_fonts.scss',
-		f_ttf2woff: source_folder + "/fonts/*.ttf",
-		f_woffSrc: source_folder + "/fonts-woff/*.*",
-		f_woffDest: source_folder + "/fonts-woff/",
+		f_ttf2woff: source_folder + "/assets/fonts/*.ttf",
+		f_woffSrc: source_folder + "/assets/fonts-woff/*.*",
+		f_woffDest: source_folder + "/assets/fonts-woff/",
 		vnd_js: source_folder + "/js/vnd/**/*.js",
 		vnd_css: source_folder + "/scss/vnd/**/*.{css,scss}"
 	},
@@ -40,16 +40,16 @@ let path = {
 		scssCssTask: source_folder + "/css/*.css",
 		// css: source_folder + "/scss/**/*.scss",
 		jsTask: source_folder + "/js/**/*.js",
-		img: source_folder + "/img/**/*.{jpg,png,svg,gif,ico,webp}",
+		img: source_folder + "/assets/img/**/*.{jpg,png,svg,gif,ico,webp}",
 		vnd_css: source_folder + "/scss/vnd/**/*.css", // добавил пути для слежения за изменениями файлов в папке scss/vnd
 		vnd_js: source_folder + "/js/vnd/**/*.js", // добавил пути для слежения за изменениями файлов в папке js/vnd
 		f_scss_fonts: source_folder + '/scss/_fonts.scss',
-		f_ttf2woff: source_folder + "/fonts/*.ttf" // добавил пути для слежения за изменениями файлов шрифтов в папке fonts/
+		f_ttf2woff: source_folder + "/assets/fonts/*.ttf" // добавил пути для слежения за изменениями файлов шрифтов в папке fonts/
 
 	},
 	clean: {
 		cleanBuild: "./" + "build",
-		cleanFontsWoff: source_folder + "/fonts-woff", //пути для команды очистки 
+		cleanFontsWoff: source_folder + "/assets/fonts-woff", //пути для команды очистки 
 		cleanSrsCss: source_folder + "/css"
 	}
 }
@@ -274,7 +274,8 @@ async function f_ttf2woff(params) {
 		setTimeout(() =>
 			console.log('\n *Шрифты конвертируются и \nсохраняются в папке ' + path.src.f_woffDest + '\n\n'), 2000
 		);
-		$flag_woff = 15;
+		// $flag_woff = 15;
+		// setTimeout(woff2build,6000);
 	}
 }
 // Функция копирования woff шрифтов из папки src/fonts-woff в папку build/ 
@@ -283,6 +284,7 @@ async function woff2build() {
 	checkFolder(path.src.f_woffDest);
 	if ($flag_folder == 5) {
 		let $tr = src(path.src.f_woffSrc)
+			.pipe(newer(path.build.fonts))
 			.pipe(dest(path.build.fonts));
 		console.log('\n ***Шрифты из папки: ' + path.src.f_woffSrc + '\n скопированы в папку: ' + path.build.fonts + '\n -----');
 		return $tr;
@@ -433,7 +435,7 @@ let watch_develop = gulp.parallel(develop, watchFiles, browserSync);
 let production = gulp.series(cleanBuild, gulp.parallel(jsTask, html, vnd_js, vnd_css));
 let watch_production = gulp.parallel(production, watchFiles, browserSync);
 // только для проверки подключения Шрифтов
-let fonts_check = gulp.series(cleanBuild, gulp.parallel(series(scssTask, cssTask, scssCssTask), jsTask, html, img, f_ttf2woff), delSrsCss, fontStyle);
+let fonts_check = gulp.series(cleanBuild, gulp.parallel(series(scssTask, cssTask, scssCssTask), jsTask, html, img, f_ttf2woff, woff2build), delSrsCss, fontStyle);
 // let fonts_check = gulp.series(clean, gulp.parallel(series(scssTask, cssTask, scssCssTask), html));
 let watch_test = gulp.parallel(fonts_check, watchFiles, browserSync);
 
