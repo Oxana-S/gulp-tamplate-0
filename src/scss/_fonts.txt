@@ -1,2 +1,8 @@
 Важно, что бы файл был пустым, начинался с 1 строки с 0-го знака
 Никаких коментарий, ничего не должно быть.
+
+/* Файл - src/scss/scss-blocks/_fonts.scss */
+p {
+  // font-style: italic;
+  font-weight: normal;
+}

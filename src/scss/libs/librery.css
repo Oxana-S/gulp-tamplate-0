@@ -1,9 +1,9 @@
-/* lib/library.css */
+/* Файл - src/scss/lib/library.css */
 a {
-  text-emphasis: none;
-}
+  /* text-emphasis: none; */
+} 
 
 div {
   background-color: #1022c5;
-  /* font-weight: lighter; */
+  font-weight: lighter;
 }

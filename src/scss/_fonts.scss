@@ -1,2 +1,5 @@
-@include font("Montserrat", "Montserrat-Regular", "400", "normal");
-@include font("Montserrat", "Montserrat-Light", "400", "normal");
+/* Файл - src/scss/scss-blocks/_fonts.scss */
+p {
+  font-style: italic;
+  font-weight: normal;
+}
