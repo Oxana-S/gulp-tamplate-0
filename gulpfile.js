@@ -55,7 +55,7 @@ let path = {
 }
 let kor = {
 	src: {
-		scssCssTask: "src/css"
+		scssCssTask: "src/css/"
 	}
 }
 
@@ -95,6 +95,7 @@ const newer = require('gulp-newer');
 const tap = require('gulp-tap');
 // const path        = require('path');
 const file_plugin = require('gulp-file');
+const { scrypt } = require('crypto');
 
 
 
@@ -459,11 +460,11 @@ let watch_build = gulp.parallel(build, watchFiles, browserSync);
 let develop = gulp.series(cleanBuild, gulp.parallel(jsTask, html, vnd_js, vnd_css));
 let watch_develop = gulp.parallel(develop, watchFiles, browserSync);
 // тесты
-let test = gulp.series(cleanBuild, gulp.parallel(css, jsTask, html, img, f_ttf2woff, woff2build), fontStyle);
+let test = gulp.series(cleanBuild, gulp.parallel(css_1, jsTask, html, img, f_ttf2woff, woff2build), fontStyle);
 // let fonts_check = gulp.series(clean, gulp.parallel(series(scssTask, cssTask, scssCssTask), html));
 let watch_test = gulp.parallel(test, watchFiles, browserSync);
 // Тест scss и css 
-let scss_css = gulp.parallel(css, watchFiles);
+let scss_css = gulp.parallel(css_1, watchFiles);
 
 
 // ANCHOR EXPORTS
@@ -547,7 +548,7 @@ async function createFolder_2() {
 	});
 };
 exports.createFolder_2 = createFolder_2;
-// ?Вариант -3
+// ?Вариант -3:*****
 async function createFolder_3(dir_name) {
 	// Include fs and path module 
 	// const fs   = require('fs');
@@ -579,7 +580,7 @@ async function createFile_1(files, dest_dir) {
 		}));
 }
 exports.createFile_1 = createFile_1;
-// ?Вариант-2:
+// ?Вариант-2:*****
 async function createFile_2(dest_dir, files) {
 	// let dest_dir_2;
 	// let files;
@@ -633,9 +634,10 @@ async function test_create_files() {
 }
 exports.test_create_files = test_create_files;
 
-// Тест - функция объединения всех тасков scss css 
-async function css() {
-	console.log('\n Работает: CSS()..\n  \n');
+// ?Тест - функция объединения всех тасков scss css:*****
+// Вариант-1:
+async function css_1() {
+	console.log('\n Работает: CSS_1()..\n  \n');
 
 	console.log('Это флаг ' + $flag_folder);
 	$flag_folder = 0;
@@ -651,6 +653,31 @@ async function css() {
 	scssTask();
 	cssTask();
 	scssCssTask()
+}
+exports.css_1 = css_1;
+
+// Вариант-2:
+async function css_2() {
+	console.log('\n Работает: CSS_2()..\n  \n');
+
+	console.log('Это флаг ' + $flag_folder);
+	$flag_folder = 0;
+	
+	
+	const makePizza = function(cb) {
+		createCssInScss();
+		setTimeout(cb, 2000);
+	}
+
+	const eatPizza = function() {
+		scssTask();
+		cssTask();
+		scssCssTask();
+	}
+
+	makePizza(eatPizza);
 
 }
-exports.css = css;
+
+
+exports.css_2 = css_2;
