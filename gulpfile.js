@@ -7,16 +7,16 @@ let source_folder = "src"; //Переменная для папки с исхо�
 // ANCHOR PATH's - Объекты для путей ко всем папкам и файлам
 let path = {
 	build: {
-		html: project_folder + "/",
+		htmlTask: project_folder + "/",
 		css: project_folder + "/css/",
 		js: project_folder + "/js/",
-		img: project_folder + "/assets/img/",
+		imgTask: project_folder + "/assets/img/",
 		fonts: project_folder + "/assets/fonts/",
 		vnd_js: project_folder + "/js/vnd/",
 		vnd_css: project_folder + "/css/vnd/"
 	},
 	src: {
-		html: [source_folder + "/*.html", "!" + source_folder + "/_*.html"],
+		htmlTask: [source_folder + "/*.html", "!" + source_folder + "/_*.html"],
 		scssTask: source_folder + "/scss/style.scss",
 		cssTaskSrc: source_folder + "/scss/**/*.css",
 		scssCssTask: source_folder + "/css",
@@ -24,7 +24,7 @@ let path = {
 		cssTaskDest: source_folder + "/css/",
 		// js: source_folder + "/js/scripts.js",
 		jsTask: source_folder + "/js/**/*.js",
-		img: source_folder + "/assets/img/**/*.{jpg,png,svg,gif,ico,webp}",
+		imgTask: source_folder + "/assets/img/**/*.{jpg,png,svg,gif,ico,webp}",
 		f_scss_fonts: source_folder + '/scss/_fonts.scss',
 		f_ttf2woff: source_folder + "/assets/fonts/*.ttf",
 		f_woffSrc: source_folder + "/assets/fonts-woff/*.*",
@@ -33,13 +33,13 @@ let path = {
 		vnd_css: source_folder + "/scss/vnd/**/*.{css,scss}"
 	},
 	watch: {
-		html: source_folder + "/**/*.html",
+		htmlTask: source_folder + "/**/*.html",
 		scssTask: source_folder + "/scss/**/*.scss",
 		cssTask: source_folder + "/scss/**/*.css",
 		scssCssTaskSrc: source_folder + "/css/*.css",
 		// scssCssTaskSrc: source_folder + "/css/*.*",
 		jsTask: source_folder + "/js/**/*.js",
-		img: source_folder + "/assets/img/**/*.{jpg,png,svg,gif,ico,webp}",
+		imgTask: source_folder + "/assets/img/**/*.{jpg,png,svg,gif,ico,webp}",
 		vnd_css: source_folder + "/scss/vnd/**/*.css", // добавил пути для слежения за изменениями файлов в папке scss/vnd
 		vnd_js: source_folder + "/js/vnd/**/*.js", // добавил пути для слежения за изменениями файлов в папке js/vnd
 		f_scss_fonts: source_folder + '/scss/_fonts.scss',
@@ -55,13 +55,13 @@ let path = {
 }
 let kor = {
 	src: {
-		scssCssTask: "src/css/"
+		scssCssTask: "/src/css/"
 	}
 }
 
-
-const { src, dest, parallel, series, watch } = require('gulp'); //вспомогательные переменные
 const gulp = require('gulp'); //подключение gulp (для использование команд по умолчанию)
+const { src, dest, parallel, series, watch } = require('gulp'); //вспомогательные переменные
+
 let browsersync = require('browser-sync').create(); //синхронизация браузера
 let fileinclude = require('gulp-file-include'); //плагин для выноса отдельных блоков
 let del = require('del'); //плагин удаление файлов
@@ -97,10 +97,6 @@ const tap = require('gulp-tap');
 const file_plugin = require('gulp-file');
 const { scrypt } = require('crypto');
 
-
-
-
-
 //Переменный для flag's
 let $flag_folder;
 let $flag_preloader;
@@ -121,25 +117,44 @@ function browserSync(done) {
 
 // *Общедоступные задачи:
 // ANCHOR HTML 
-function html() {
-	console.log('\n Работает: html()..\n  \n');
-	return src(path.src.html) //путь к исходным html файлам
+function htmlTask() {
+	console.log('\n Работает: htmlTask()..\n  \n');
+	return src(path.src.htmlTask) //путь к исходным html файлам
 		.pipe(fileinclude()) //обращаемся к fileinclude
 		.pipe(webphtml()) //формирование путей к webp
 		.pipe(beautify.html())//
-		.pipe(dest(path.build.html)) //путь к выходящим html файлам
+				.pipe(dest(path.build.htmlTask)) //путь к выходящим html файлам
 		.pipe(browsersync.stream()); //синхронизация браузера
 }
 
 // ANCHOR SCSS и CSS 
-// Тест - функции createFile_1(params)
+async function css() {
+	console.log('\n Работает: CSS_2()..\n  \n');
+
+	console.log('Это флаг ' + $flag_folder);
+	$flag_folder = 0;
+
+
+	const makePizza = function (cb) {
+		createCssInScss();
+		setTimeout(cb, 2000);
+	}
+
+	const eatPizza = function () {
+		scssTask();
+		cssTask();
+		scssCssTask();
+	}
+	makePizza(eatPizza);
+}
+
 async function createCssInScss() {
 	let fileNames = ['style.css', 'vndLib.css']
 
 	createFolder_3(kor.src.scssCssTask);
 
 	fileNames.forEach(element => {
-		createFile_2('./src/css', element);
+		createFile_2('./src/css/', element);
 		$flag_folder = 5;
 	});
 
@@ -177,8 +192,7 @@ function cssTask() {
 
 async function scssCssTask() {
 	console.log('\n Работает: scssCssTask()..\n  \n');
-	// checkFolder(path.src.scssCssTask);
-	// if ($flag_folder == 5) {
+
 	return src(path.src.scssCssTaskSrc, {}) //путь к исходным css файлам
 		.pipe(plumber())
 		.pipe(sourcemaps.init())
@@ -198,9 +212,6 @@ async function scssCssTask() {
 		.pipe(rename({ extname: ".min.css" }))
 		.pipe(sourcemaps.write())
 		.pipe(dest(path.build.css))
-	// } else {
-	// 	console.log('999999999999999999999999999999999999999999');
-	// }
 }
 
 function vnd_css() {
@@ -246,19 +257,19 @@ function vnd_js() {
 }
 
 // ANCHOR IMG
-function img() {
-	console.log('\n Работает: img()..\n  \n');
-	return src(path.src.img) //путь к исходным img файлам
-		.pipe(newer(path.build.img))
+function imgTask() {
+	console.log('\n Работает: imgTask()..\n  \n');
+	return src(path.src.imgTask) //путь к исходным img файлам
+		.pipe(newer(path.build.imgTask))
 		.pipe(
 			webp({
 				quality: 70
 			})
 		)
-		.pipe(dest(path.build.img))
+		.pipe(dest(path.build.imgTask))
 
-		.pipe(src(path.src.img))
-		.pipe(newer(path.build.img))
+		.pipe(src(path.src.imgTask))
+		.pipe(newer(path.build.imgTask))
 		.pipe(
 			imagemin({
 				progressive: true,
@@ -267,17 +278,23 @@ function img() {
 				optimizationLevel: 3 // 0 to 7 //Уровень сжатия
 			})
 		)
-		.pipe(dest(path.build.img)) //путь к выходящим img файлам
+		.pipe(dest(path.build.imgTask)) //путь к выходящим img файлам
 		.pipe(browsersync.stream()) //синхронизация браузера
 }
 
 // ANCHOR FONTS -  Шрифты - Конвертация ttf в woff
-async function f_ttf2woff(params) {
+async function ttf2woffTask() {
+	console.log('\n Работает: ttf2woffTask()..\n  \n');
+	f_ttf2woff(woff2build);
+};
+exports.ttf2woffTask = ttf2woffTask;
+// Функция конвертирования ttf в woff и woff2
+async function f_ttf2woff(cb) {
 	console.log('\n Работает: f_ttf2woff()..\n  \n');
 	checkFolder(path.src.f_woffDest);
 	console.log($flag_folder);
 	if ($flag_folder == 5) {
-		console.log('\n *Точно, папка с конвертированными Шрифтами уже есть!\n **Копирую Шрифты в папку ' + path.build.fonts);
+		console.log('\n *Gапка с конвертированными Шрифтами уже есть!\n **Копирую Шрифты в папку ' + path.build.fonts);
 		woff2build();
 	}
 	else {
@@ -292,9 +309,9 @@ async function f_ttf2woff(params) {
 		setTimeout(() =>
 			console.log('\n *Шрифты конвертируются и \nсохраняются в папке ' + path.src.f_woffDest + '\n\n'), 2000
 		);
-		// $flag_woff = 15;
-		// setTimeout(woff2build,6000);
+		setTimeout(cb, 2000);
 	}
+
 }
 // Функция копирования woff шрифтов из папки src/fonts-woff в папку build/ 
 async function woff2build() {
@@ -302,7 +319,7 @@ async function woff2build() {
 	checkFolder(path.src.f_woffDest);
 	if ($flag_folder == 5) {
 		let $tr = src(path.src.f_woffSrc)
-			.pipe(newer(path.build.fonts))
+			// .pipe(newer(path.build.fonts))
 			.pipe(dest(path.build.fonts));
 		console.log('\n ***Шрифты из папки: ' + path.src.f_woffSrc + '\n скопированы в папку: ' + path.build.fonts + '\n -----');
 		return $tr;
@@ -358,7 +375,7 @@ gulp.task('svgSprite', function () {
 			},
 		}
 		))
-		.pipe(dest(path.build.img))
+		.pipe(dest(path.build.imgTask))
 })
 // Частная Задача-2. Шрифты - отдельная задача (ЕСЛИ есть необходимость) для конвертации otf в ttf
 gulp.task('otf2ttf', function () {
@@ -439,38 +456,40 @@ async function checkFile() {
 // ANCHOR Watcher
 //Отслеживание файлов для синхронизации
 function watchFiles() {
-	gulp.watch([path.watch.html], html);
-	gulp.watch([path.watch.scssTask], scssTask);
-	gulp.watch([path.watch.cssTask], cssTask);
-	gulp.watch([path.watch.scssCssTaskSrc], scssCssTask);
-	gulp.watch([path.watch.jsTask], jsTask);
-	gulp.watch([path.watch.img], img);
-	gulp.watch([path.watch.img], img);
-	gulp.watch([path.watch.vnd_css], vnd_css); // добавил слежение за файлами в папке scss/vnd
-	gulp.watch([path.watch.vnd_js], vnd_js); // добавил слежение за файлами в папке js/vnd
-	gulp.watch([path.watch.f_ttf2woff], f_ttf2woff); // добавил слежение за файлами шрифтов в папке fonts/
+	watch([path.watch.htmlTask], htmlTask);
+	watch([path.watch.scssTask], scssTask);
+	watch([path.watch.cssTask], cssTask);
+	watch([path.watch.scssCssTaskSrc], scssCssTask);
+	watch([path.watch.jsTask], jsTask);
+	watch([path.watch.imgTask], imgTask);
+	watch([path.watch.imgTask], imgTask);
+	watch([path.watch.vnd_css], vnd_css); // добавил слежение за файлами в папке scss/vnd
+	watch([path.watch.vnd_js], vnd_js); // добавил слежение за файлами в папке js/vnd
+	watch([path.watch.f_ttf2woff], f_ttf2woff); // добавил слежение за файлами шрифтов в папке fonts/
 
 }
 
 // ANCHOR Команды для запуска:
 // build 
-let build = gulp.series(cleanBuild, gulp.parallel(jsTask, html, img, f_ttf2woff, vnd_js, vnd_css), cleanSrcCss, fontStyle);
-let watch_build = gulp.parallel(build, watchFiles, browserSync);
+let build = series(cleanBuild, parallel(jsTask, htmlTask, imgTask, f_ttf2woff, vnd_js, vnd_css), cleanSrcCss, fontStyle);
+let watch_build = parallel(build, watchFiles, browserSync);
 // develop - для работы, чтобы время не тратить на шрифты и картинки, watch долго запускается 
-let develop = gulp.series(cleanBuild, gulp.parallel(jsTask, html, vnd_js, vnd_css));
-let watch_develop = gulp.parallel(develop, watchFiles, browserSync);
+let develop = series(cleanBuild, parallel(jsTask, htmlTask, vnd_js, vnd_css));
+let watch_develop = parallel(develop, watchFiles, browserSync);
 // тесты
-let test = gulp.series(cleanBuild, gulp.parallel(css_1, jsTask, html, img, f_ttf2woff, woff2build), fontStyle);
-// let fonts_check = gulp.series(clean, gulp.parallel(series(scssTask, cssTask, scssCssTask), html));
-let watch_test = gulp.parallel(test, watchFiles, browserSync);
+// let test = gulp.series(cleanBuild, gulp.parallel(css, jsTask, htmlTask, imgTask, f_ttf2woff, woff2build), fontStyle);
+let test = series(cleanBuild, (parallel(css_3, jsTask, htmlTask, imgTask, f_ttf2woff, woff2build)));
+
+let watch_test = parallel(test, watchFiles, browserSync);
 // Тест scss и css 
-let scss_css = gulp.parallel(css_1, watchFiles);
+let scss_css = parallel(css, htmlTask, jsTask, imgTask, watchFiles, browserSync, f_ttf2woff, woff2build);
 
 
 // ANCHOR EXPORTS
 // html
-exports.html = html; //срабатывание команды html
+exports.htmlTask = htmlTask; //срабатывание команды html
 // scss, css
+exports.css = css;
 exports.createCssInScss = createCssInScss; // Создание Папки src/css 
 exports.scssTask = scssTask; // Объединение scss файлов в корне папки scss/ и  папке scss-blocks/
 exports.cssTask = cssTask; // Объединение css файлов в папках: libs/ и vnd/ css
@@ -481,7 +500,7 @@ exports.jsTask = jsTask; //срабатывание команды js
 exports.vnd_js = vnd_js; // запуск команды для обновления js файлов папке vnd 
 // exports.js = js; //срабатывание команды js
 // img
-exports.img = img; //срабатывание команды img
+exports.imgTask = imgTask; //срабатывание команды img
 // fonts
 exports.fontStyle = fontStyle; //запуск команды подключение шрифтов в файл стилей
 exports.f_ttf2woff = f_ttf2woff; //запуск команды для шрифтов
@@ -627,14 +646,13 @@ exports.test_my_duration = test_my_duration;
 async function test_create_files() {
 	let fileNames = ['style.css', 'vndLib.css']
 
-	// return fileNames.forEach(createFile_1('fileName'))
 	fileNames.forEach(element => {
 		createFile_1(element, './src/css');
 	});
 }
 exports.test_create_files = test_create_files;
 
-// ?Тест - функция объединения всех тасков scss css:*****
+// Тест - функция объединения всех тасков scss css:*****
 // Вариант-1:
 async function css_1() {
 	console.log('\n Работает: CSS_1()..\n  \n');
@@ -656,28 +674,47 @@ async function css_1() {
 }
 exports.css_1 = css_1;
 
-// Вариант-2:
+// ?Вариант-2:
 async function css_2() {
 	console.log('\n Работает: CSS_2()..\n  \n');
 
 	console.log('Это флаг ' + $flag_folder);
 	$flag_folder = 0;
-	
-	
-	const makePizza = function(cb) {
+
+
+	const makePizza = function (cb) {
 		createCssInScss();
 		setTimeout(cb, 2000);
 	}
 
-	const eatPizza = function() {
+	const eatPizza = function () {
 		scssTask();
 		cssTask();
 		scssCssTask();
 	}
+	makePizza(eatPizza);
+}
+exports.css_2 = css_2;
+
+// ?Вариант-3:
+async function css_3() {
+	console.log('\n Работает: CSS_3()..\n  \n');
+
+	console.log('Это флаг ' + $flag_folder);
+	$flag_folder = 0;
+
+	const makePizza = function (cb) {
+		createCssInScss();
+		setTimeout(cb, 1000);
+	}
+
+	const eatPizza = function () {
+		scssTask();
+		cssTask();
+		// cb для eatPizza будет функция - scssCssTask();
+		setTimeout(scssCssTask, 1000);
+	}
 
 	makePizza(eatPizza);
-
 }
-
-
-exports.css_2 = css_2;
+exports.css_3 = css_3;
