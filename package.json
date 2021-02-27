@@ -9,6 +9,7 @@
   "author": "VLD",
   "license": "ISC",
   "devDependencies": {
+    "async": "^3.2.0",
     "browser-sync": "^2.26.13",
     "del": "^6.0.0",
     "gulp": "^4.0.2",
@@ -16,6 +17,8 @@
     "gulp-beautify": "^3.0.0",
     "gulp-clean-css": "^4.3.0",
     "gulp-concat": "^2.6.1",
+    "gulp-duration": "0.0.0",
+    "gulp-file": "^0.4.0",
     "gulp-file-include": "^2.3.0",
     "gulp-fonter": "^0.3.0",
     "gulp-group-css-media-queries": "^1.2.2",
@@ -27,6 +30,8 @@
     "gulp-sass": "^4.1.0",
     "gulp-sourcemaps": "^3.0.0",
     "gulp-svg-sprite": "^1.5.0",
+    "gulp-tap": "^2.0.0",
+    "gulp-through": "^0.4.0",
     "gulp-ttf2woff": "^1.1.1",
     "gulp-ttf2woff2": "^3.0.0",
     "gulp-uglify-es": "^2.0.0",
@@ -35,6 +40,11 @@
     "gulp-webp-html": "^1.0.2",
     "gulp-webpcss": "^1.1.1",
     "imagemin-webp": "^6.0.0",
+    "length-stream": "^0.1.1",
+    "path": "^0.12.7",
+    "stream-length": "^1.0.2",
+    "stream-size": "0.0.6",
     "webp-converter": "^2.3.1"
-  }
+  },
+  "dependencies": {}
 }
