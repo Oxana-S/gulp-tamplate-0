@@ -1,4 +1,4 @@
-/* Ветка-cssTask-2, Commit-11 */
+/* Ветка-cssTask-2, Commit-12 */
 //
 //Этот файл содержит логику работы всей сборки проекта
 let project_folder = "build"; //Переменная для папки результата проекта, выгружается на сервер и передается заказчику
@@ -22,7 +22,6 @@ let path = {
 		scssCssTask: source_folder + "/css",
 		scssCssTaskSrc: source_folder + "/css/*.css",
 		cssTaskDest: source_folder + "/css/",
-		// js: source_folder + "/js/scripts.js",
 		jsTask: source_folder + "/js/**/*.js",
 		imgTask: source_folder + "/assets/img/**/*.{jpg,png,svg,gif,ico,webp}",
 		f_scss_fonts: source_folder + '/scss/_fonts.scss',
@@ -37,7 +36,6 @@ let path = {
 		scssTask: source_folder + "/scss/**/*.scss",
 		cssTask: source_folder + "/scss/**/*.css",
 		scssCssTaskSrc: source_folder + "/css/*.css",
-		// scssCssTaskSrc: source_folder + "/css/*.*",
 		jsTask: source_folder + "/js/**/*.js",
 		imgTask: source_folder + "/assets/img/**/*.{jpg,png,svg,gif,ico,webp}",
 		vnd_css: source_folder + "/scss/vnd/**/*.css", // добавил пути для слежения за изменениями файлов в папке scss/vnd
@@ -51,13 +49,16 @@ let path = {
 		cleanBuild: project_folder,
 		cleanFontsWoff: source_folder + "/assets/fonts-woff", //пути для команды очистки 
 		cleanSrcCss: source_folder + "/css"
-	}
-}
-let kor = {
-	src: {
+	},
+	create: {
 		scssCssTask: "/src/css/"
 	}
 }
+// let create = {
+// 		src: {
+// 			scssCssTask: "/src/css/"
+// 		}
+// 	}
 
 const gulp = require('gulp'); //подключение gulp (для использование команд по умолчанию)
 const { src, dest, parallel, series, watch } = require('gulp'); //вспомогательные переменные
@@ -95,7 +96,6 @@ const newer = require('gulp-newer');
 const tap = require('gulp-tap');
 const file_plugin = require('gulp-file');
 
-
 //Переменный для flag's
 let $flag_folder;
 let $flag_preloader;
@@ -127,30 +127,35 @@ function htmlTask() {
 }
 
 // ANCHOR SCSS и CSS 
+// ?css - css() - createCssInScss(), scssTask(), cssTask(), cb->scssCssTask()
+// Тест css_3() 
+// Функция конвертирования ttf в woff и woff2 в папку src/assets/fonts-woff
 async function css() {
-	console.log('\n Работает: CSS_2()..\n  \n');
+	console.log('\n Работает: CSS_3()..\n  \n');
 
 	console.log('Это флаг ' + $flag_folder);
 	$flag_folder = 0;
 
-
 	const makePizza = function (cb) {
 		createCssInScss();
-		setTimeout(cb, 2000);
+		setTimeout(cb, 1000);
 	}
 
 	const eatPizza = function () {
 		scssTask();
 		cssTask();
-		scssCssTask();
+		// cb для eatPizza будет функция - scssCssTask();
+		setTimeout(scssCssTask, 1000);
 	}
+
 	makePizza(eatPizza);
 }
 
 async function createCssInScss() {
+	console.log('\n Работает: createCssInScss()..\n  \n');
 	let fileNames = ['style.css', 'vndLib.css']
 
-	createFolder_3(kor.src.scssCssTask);
+	createFolder_3(path.create.scssCssTask);
 
 	fileNames.forEach(element => {
 		createFile_2('./src/css/', element);
@@ -214,6 +219,7 @@ async function scssCssTask() {
 }
 
 function vnd_css() {
+	console.log('\n Работает: vnd_css()..\n  \n');
 	return src(path.src.vnd_css)
 		// .pipe(
 		// 	autoprefixer({
@@ -249,6 +255,7 @@ function jsTask() {
 }
 
 function vnd_js() {
+	console.log('\n Работает: vnd_js()..\n  \n');
 	return src(path.src.vnd_js)
 		.pipe(uglify(/* options */))
 		.pipe(dest(path.build.vnd_js))
@@ -281,15 +288,14 @@ function imgTask() {
 		.pipe(browsersync.stream()) //синхронизация браузера
 }
 
-
 // ANCHOR FONTS 
 // ?Шрифты - f_ttf2woff() - Конвертация ttf в woff
 // Функция конвертирования ttf в woff и woff2 в папку src/assets/fonts-woff
 // копирует папку src/assets/fonts-woff в папку build/assets/fonts-woff - (woff2build())
 // прописывает шрифты в файл scss/_fonts/scss из папки src/assets/fonts-woff - (fontStyle())
 async function f_ttf2woff() {
-	let $numbers_fonts = 0;
 	console.log('\n Работает: f_ttf2woff()..\n  \n');
+	let $numbers_fonts = 0;
 	checkFolder(path.src.f_woffDest);
 	console.log($flag_folder);
 	if ($flag_folder == 5) {
@@ -342,14 +348,14 @@ async function woff2build() {
 }
 
 // Шрифты - fontStyle() - Прописывает шрифты в файл scss/_fonts/scss 
-async function fontStyle(){
+async function fontStyle() {
 	console.log('\n Работает: fontStyle()..\n Закончился процесс конвертации ttf файлов в woff и woff2 \n');
 	let file_content = fs.readFileSync(path.src.f_scss_fonts);
 	if (file_content == '') {
 		console.log('\n Файл _fonts.scss - Пустой, Процесс пошел!');
-		fs.writeFile(path.src.f_scss_fonts, '', cb); 
+		fs.writeFile(path.src.f_scss_fonts, '', cb);
 		// return fs.readdir(path.build.fonts, function (err, items) { 
-		return fs.readdir(path.src.f_woffDest, function (err, items) { 
+		return fs.readdir(path.src.f_woffDest, function (err, items) {
 			if (items) {
 				let c_fontname;
 				let $numbers_fonts = items.length;
@@ -408,7 +414,7 @@ gulp.task('otf2ttf', function () {
 // Функция-1.1  clean() - Очистка папок build/ и src/assets/fonts-woff/ и src/css/
 async function clean() {
 	console.log('\n Работает: clean()..\n  \n');
-	console.log('\n ** Удаление папки ' + path.clean.cleanFontsWoff + ' и ' + path.clean.cleanBuild + '**\n');
+	console.log('\n ** Удаление папок ' + path.clean.cleanFontsWoff + ' , ' + path.clean.cleanBuild + ' и ' + path.clean.cleanSrcCss + '**\n');
 	del(path.clean.cleanFontsWoff);
 	del(path.clean.cleanBuild);
 	del(path.clean.cleanSrcCss);
@@ -434,7 +440,7 @@ function cleanBuild() {
 
 // Функция-1.4  cleanSrcCss() - Очистка папки src/css/
 async function cleanSrcCss() {
-	console.log('\n Работает: delSrcCss()..\n  \n');
+	console.log('\n Работает: cleanSrcCss()..\n  \n');
 	console.log('\n ** Удаление папки ' + path.clean.cleanSrcCss + ' **\n');
 	del(path.clean.cleanSrcCss);
 }
@@ -465,7 +471,6 @@ async function checkFolder(params) {
 		return console.log('\n* Выход из функции-2 *\n');
 	}
 }
-// exports.checkFolder = checkFolder;
 
 // Функция-2. checkFile() - Проверка наличия файлов 
 async function checkFile() {
@@ -475,6 +480,7 @@ async function checkFile() {
 // ANCHOR Watcher
 // watchFiles() - Отслеживание файлов для синхронизации
 function watchFiles() {
+	console.log('\n Работает: watchFiles()..\n  \n');
 	watch([path.watch.htmlTask], htmlTask);
 	watch([path.watch.scssTask], scssTask);
 	watch([path.watch.cssTask], cssTask);
@@ -493,14 +499,8 @@ function watchFiles() {
 let build = series(cleanBuild, parallel(jsTask, htmlTask, imgTask, f_ttf2woff, vnd_js, vnd_css), cleanSrcCss, fontStyle);
 let watch_build = parallel(build, watchFiles, browserSync);
 // develop - для работы, чтобы время не тратить на шрифты и картинки, watch долго запускается 
-let develop = series(cleanBuild, parallel(jsTask, htmlTask, vnd_js, vnd_css));
-let watch_develop = parallel(develop, watchFiles, browserSync);
-// тесты
-// let test = gulp.series(cleanBuild, gulp.parallel(css, jsTask, htmlTask, imgTask, f_ttf2woff, woff2build), fontStyle);
-// let test = series(cleanBuild, (parallel(css_3, jsTask, htmlTask, imgTask, f_ttf2woff, woff2build, watchFiles)));
-let test = series(cleanBuild, (parallel(css_3, jsTask, htmlTask, imgTask, f_ttf2woff, watchFiles)));
-
-let watch_test = parallel(test, browserSync);
+let develop = series(cleanBuild, (parallel(css, jsTask, htmlTask, imgTask, f_ttf2woff, watchFiles)));
+let watch_develop = parallel(develop, browserSync);
 // Тест scss и css 
 let scss_css = parallel(css, htmlTask, jsTask, imgTask, watchFiles, f_ttf2woff, browserSync);
 
@@ -530,6 +530,7 @@ exports.clean = clean; // Функция-1.3 - Запуск Удаления д�
 exports.cleanBuild = cleanBuild; // Функция-1.1 - Запуск Удаления директории - build
 exports.cleanFontsWoff = cleanFontsWoff; // Функция-1.2 - Запуск удаления директории - src/fonts-woff/
 exports.cleanSrcCss = cleanSrcCss; // Функция-1.3 - Запуск Удаления директорий - src/css/ 
+exports.checkFolder = checkFolder;
 // Команды 
 exports.build = build; //первый, для проверки загрузки шрифтов и оптимизации картинок
 exports.watch_build = watch_build; //
@@ -538,8 +539,6 @@ exports.watch_develop = watch_develop; //
 /*По умолчанию поставил режим разработки. Всегда можно поменять*/
 exports.default = watch_develop; //запуск gulp который по умолчанию перенаправляет на срабатывание watch
 // Тесты:
-exports.test = test;
-exports.watch_test = watch_test;
 exports.scss_css = scss_css;
 exports.watchFiles = watchFiles;
 
@@ -548,6 +547,7 @@ exports.watchFiles = watchFiles;
 // ANCHOR ФУНКЦИИ для РАБОТЫ:
 /* Функция - twirlTimer() - Визуальный лоадер загрузки, пока не понял как применять */
 async function twirlTimer() {
+	console.log('\n Работает: twirlTimer()..\n  \n');
 	var P = ["\\", "|", "/", "-"];
 	var x = 0;
 	return setInterval(function () {
@@ -560,6 +560,7 @@ exports.twirlTimer = twirlTimer;
 /* Функции - createFolder_?() -Создание структуры только Папок проекта: */
 // Вариант -1
 async function createFolder_1() {
+	console.log('\n Работает: createFolder_1()..\n  \n');
 	return src('*.*', { read: false })
 		.pipe(gulp.dest('./1/text'))
 		.pipe(gulp.dest('./2'))
@@ -569,6 +570,7 @@ exports.createFolder_1 = createFolder_1;
 
 // Вариант -2
 async function createFolder_2() {
+	console.log('\n Работает: createFolder_2()..\n  \n');
 	const fs = require('fs');
 
 	const folders = [
@@ -591,6 +593,7 @@ exports.createFolder_2 = createFolder_2;
 
 // ?Вариант -3:*****
 async function createFolder_3(dir_name) {
+	console.log('\n Работает: createFolder_3()..\n  \n');
 	// Include fs and path module 
 	// const fs   = require('fs');
 	const path = require('path');
@@ -607,6 +610,7 @@ exports.createFolder_3 = createFolder_3;
 /* Функции - createFile_?() - Создание Файлов:  */
 // Вариант-1:
 async function createFile_1(files, dest_dir) {
+	console.log('\n Работает: createFile_1()..\n  \n');
 	// Нужны плагины:
 	// const tap     = require('gulp-tap'),
 	// const file_plugin = require('gulp-file');
@@ -624,6 +628,7 @@ exports.createFile_1 = createFile_1;
 
 // ?Вариант-2:*****
 async function createFile_2(dest_dir, files) {
+	console.log('\n Работает: createFile_2()..\n  \n');
 	// let dest_dir_2;
 	// let files;
 	fs.open(dest_dir + files, 'w', (err) => {
@@ -638,12 +643,14 @@ exports.createFile_2 = createFile_2;
 // ANCHOR ТЕСТЫ, ПРОВЕРОЧНЫЕ И ОТЛАДОЧНЫЕ ФУНКЦИИ:
 // Тест - Функция - Проверить Переменную
 async function debug_var(params) {
+	console.log('\n Работает: debug_var()..\n  \n');
 	console.log('\n*' + params + '*\n');
 }
 exports.debug_var = debug_var;
 
 // Тест - Функция - Проверить Пути 
 async function debug_path() {
+	console.log('\n Работает: debug_path()..\n  \n');
 	let h = path.src.f_woffDest;
 	let p = checkFolder(path.src.f_woffDest);
 	console.log(h);
@@ -653,7 +660,6 @@ exports.debug_path = debug_path;
 
 // Тест - Тестировал duration() и .on()
 async function test_my_duration() {
-
 	return src(path.src.f_ttf2woff)
 		.pipe(ttf2woff2())
 		.on('finish', function () {
@@ -667,6 +673,7 @@ exports.test_my_duration = test_my_duration;
 
 // Тест - функции createFile_1(params)
 async function test_create_files() {
+	console.log('\n Работает: test_create_files()..\n  \n');
 	let fileNames = ['style.css', 'vndLib.css']
 
 	fileNames.forEach(element => {
@@ -685,8 +692,6 @@ async function css_1() {
 	console.log('Это флаг ' + $flag_folder);
 	do {
 		createCssInScss();
-		// createFolder_3(kor.src.scssCssTask);
-		// createFile_2('./src/css/', 'style.css',);
 		$flag_folder = 15
 	} while ($flag_folder != 15);
 	console.log('\n*Это флаг ' + $flag_folder + '\n');
@@ -745,6 +750,7 @@ exports.css_3 = css_3;
 // ------------------------
 
 async function someTask() {
+	console.log('\n Работает: someTask()..\n  \n');
 
 
 }
