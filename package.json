@@ -40,7 +40,10 @@
     "gulp-webp-html": "^1.0.2",
     "gulp-webpcss": "^1.1.1",
     "imagemin-webp": "^6.0.0",
+    "length-stream": "^0.1.1",
     "path": "^0.12.7",
+    "stream-length": "^1.0.2",
+    "stream-size": "0.0.6",
     "webp-converter": "^2.3.1"
   },
   "dependencies": {}

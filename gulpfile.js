@@ -1,4 +1,4 @@
-/* Ветка-cssTask-2, Commit-14 */
+/* Ветка-cssTask-2, Commit-15 */
 //
 //Этот файл содержит логику работы всей сборки проекта
 let project_folder = "build"; //Переменная для папки результата проекта, выгружается на сервер и передается заказчику
@@ -25,6 +25,7 @@ let path = {
 		jsTask: source_folder + "/js/**/*.js",
 		imgTask: source_folder + "/assets/img/**/*.{jpg,png,svg,gif,ico,webp}",
 		f_scss_fonts: source_folder + '/scss/_fonts.scss',
+		f_ttf: source_folder + "/assets/fonts/",
 		f_ttf2woff: source_folder + "/assets/fonts/*.ttf",
 		f_woffSrc: source_folder + "/assets/fonts-woff/*.*",
 		f_woffDest: source_folder + "/assets/fonts-woff/",
@@ -65,7 +66,7 @@ let scss = require('gulp-sass'); //плагин препроцессора sass
 let sourcemaps = require('gulp-sourcemaps');
 let autoprefixer = require('gulp-autoprefixer'); //добавления префиксов к css свойствам
 let group_media = require("gulp-group-css-media-queries"); //группировка медиа запросов
-let clean_css = require("gulp-clean-css"); //чистка и сжатие css
+let cleanCSS = require("gulp-clean-css"); //чистка и сжатие css
 let rename = require("gulp-rename"); //переименовывание файла
 let imagemin = require("gulp-imagemin"); //оптимизация изображений
 let uglify = require("gulp-uglify-es").default; //сжатие js
@@ -90,11 +91,16 @@ const through = require('gulp-through');
 const newer = require('gulp-newer');
 const tap = require('gulp-tap');
 const file_plugin = require('gulp-file');
+const streamSize = require('stream-size');
+const streamLength = require('stream-length'); // для функций lengthStream_1-2
+// const lengthStream = require('length-stream'); //! не получилось, можно удалить
+
 
 //Переменный для flag's
 let $flag_folder;
 let $flag_preloader;
 
+// Переменные (Массивы)  для названий и путей файлам 
 // **CSS
 // Порядок Конкатенации файлов Стилей Вендеров и Библиотек
 // в функции cssTask()
@@ -234,6 +240,7 @@ async function scssCssTask() {
 		.pipe(dest(path.build.css))
 		.pipe(browsersync.stream()) //синхронизация браузера
 		.pipe(rename({ extname: ".min.css" }))
+		.pipe(cleanCSS())
 		.pipe(sourcemaps.write())
 		.pipe(dest(path.build.css))
 }
@@ -270,6 +277,7 @@ function jsTask() {
 			rename({
 				extname: ".min.js"
 			}))
+		.pipe(uglify())
 		.pipe(sourcemaps.write())
 		.pipe(dest(path.build.js))
 		.pipe(browsersync.stream()) //синхронизация браузера
@@ -325,6 +333,9 @@ async function f_ttf2woff() {
 	}
 	else {
 		console.log('\n *Начался процесс конвертации ttf файлов в woff и woff2 \n');
+			setTimeout(() =>
+			console.log('\n *Шрифты конвертируются и \nсохраняются в папке ' + path.src.f_woffDest + '\n\n'), 1000
+		);
 
 		let r = src(path.src.f_ttf2woff)
 			.pipe(ttf2woff())
@@ -334,17 +345,23 @@ async function f_ttf2woff() {
 			.pipe(ttf2woff2())
 			.pipe(dest(path.src.f_woffDest));
 
-		setTimeout(() =>
-			console.log('\n *Шрифты конвертируются и \nсохраняются в папке ' + path.src.f_woffDest + '\n\n'), 2000
-		);
+		var downloaded = 0;
+
+		r.on('data', function () {
+			downloaded++;
+			console.log('\n downloaded файл ', downloaded);
+		});
+
+		t.on('data', function () {
+			downloaded++;
+			console.log('\n downloaded файл ', downloaded);
+		});
 
 		r.on('finish', function () {
 			// $numbers_fonts = 5;
-			console.log('\n\n\n\nШрифты конвертированы в ttf2woff')
 		});
 
 		t.on('finish', function () {
-			console.log('\n\n\n\nШрифты конвертированы в ttf2woff2');
 			$numbers_fonts = 5;
 			woff2build();
 			fontStyle();
@@ -482,14 +499,14 @@ async function checkFolder(params) {
 	console.log('\n Работает: checkFolder()..\n  \n');
 	var fs = require('fs');
 	if (fs.existsSync(params)) {
-		console.log('\n*Папка уже' + params + ' Есть\n');
+		console.log('\n*Папка ' + params + ' уже Есть\n');
 
 		$flag_folder = 5;
-		return console.log('\n* Выход из функции-1 *\n');
+		return console.log('\n* Выход из функции checkFolder() -1 *\n');
 	} else {
 		console.log('\n**Такой Папки ' + params + ' Нет\n');
 		$flag_folder = 10;
-		return console.log('\n* Выход из функции-2 *\n');
+		return console.log('\n* Выход из функции checkFolder() -2 *\n');
 	}
 }
 
@@ -517,13 +534,16 @@ function watchFiles() {
 
 // ANCHOR Команды для запуска:
 // build 
-// Запускаю команду очистки gulp clean
-let build = series(cleanBuild, parallel(css, jsTask, htmlTask, imgTask, f_ttf2woff, watchFiles, vnd_js, vnd_css), cleanSrcCss);
-let watch_build = parallel(build, browserSync);
-// develop - для работы, чтобы время не тратить на шрифты и картинки, watch долго запускается 
-let develop = series(cleanBuild, (parallel(css, jsTask, htmlTask, imgTask, f_ttf2woff, watchFiles)));
-let watch_develop = parallel(develop, browserSync);
-// Тест scss и css 
+// 1. Сначала Запускаю команду очистки: gulp clean
+// 2. И запускаем команду: gulp watch_build
+let watch_build = series(cleanBuild, parallel(css, jsTask, htmlTask, imgTask, f_ttf2woff, watchFiles, vnd_js, vnd_css));
+let build = parallel(watch_build, browserSync);
+// develop
+//Для работы, чтобы время не тратить на шрифты и картинки, watch долго запускается 
+let watch_develop = series(cleanBuild, (parallel(css, jsTask, htmlTask, imgTask, f_ttf2woff, watchFiles)));
+let develop = parallel(watch_develop, browserSync);
+// Тесты:
+// Тест - scss и css 
 let scss_css = parallel(css, htmlTask, jsTask, imgTask, watchFiles, f_ttf2woff, browserSync);
 
 
@@ -558,8 +578,10 @@ exports.build = build; //первый, для проверки загрузки 
 exports.watch_build = watch_build; //
 exports.develop = develop; // разработка, без обновления шрифтов и картинок 
 exports.watch_develop = watch_develop; //
-/*По умолчанию поставил режим разработки. Всегда можно поменять*/
-exports.default = watch_develop; //запуск gulp который по умолчанию перенаправляет на срабатывание watch
+//
+/* По умолчанию поставил режим разработки. Всегда можно поменять*/
+exports.default = develop; //запуск gulp который по умолчанию перенаправляет на срабатывание watch_develop
+//
 // Тесты:
 exports.scss_css = scss_css;
 exports.watchFiles = watchFiles;
@@ -769,11 +791,60 @@ async function css_3() {
 }
 exports.css_3 = css_3;
 
-// ------------------------
+// --------------------------------------------------------------
+// Тест lengthStream_1() - Определение длины передаваемого потока
+// Источник: https://github.com/joepie91/node-stream-length
+async function lengthStream_1() {
+	console.log('\n Работает: lengthStream_1()..\n  \n');
+	// Нужен плагин: stream-length
+	// var streamLength = require("stream-length");
 
-async function someTask() {
-	console.log('\n Работает: someTask()..\n  \n');
+	var streamLength = require("stream-length");
+	var fileSource = source_folder + "/" + "test.md";
 
+	streamLength(fs.createReadStream(fileSource), {}, function (err, result) {
+		if (err) {
+			console.log("Could not determine length. Error: " + err.toString());
+		}
+		else {
+			console.log("The length of test.md is " + result);
+		}
+	});
+}
+exports.lengthStream_1 = lengthStream_1;
+
+// Массив с файлами исходных Шрифтов проекта
+let arrayFonts = [
+	"Montserrat-Light.ttf",
+	"Montserrat-Regular.ttf"
+];
+// Тест lengthStream_2() - Определение длины передаваемого потока
+// используя массив файлов
+async function lengthStream_2() {
+	console.log('\n Работает: lengthStream_2()..\n  \n');
+
+	var streamLength = require("stream-length");
+	var fileSource = path.src.f_ttf + arrayFonts[0];
+	console.log(fileSource);
+	var stream = fs.createReadStream(fileSource);
+
+	streamLength(stream, {}, function (err, result) {
+		if (err) {
+			console.log("Could not determine length. Error: " + err.toString());
+		}
+		else {
+			console.log("The length of " + fileSource + " is " + result);
+		}
+	});
+}
+exports.lengthStream_2 = lengthStream_2;
+
+
+
+// Тест streamLength_1() - Определение длины передаваемого потока
+// Источник: https://github.com/jeffbski/length-stream
+async function streamLength_1() {
+	console.log('\n Работает: streamLength_1()..\n  \n');
 
 }
-exports.someTask = someTask;
+exports.streamLength_1 = streamLength_1;
