@@ -1,4 +1,4 @@
-/* Ветка-cssTask-2, Commit-12 */
+/* Ветка-cssTask-2, Commit-14 */
 //
 //Этот файл содержит логику работы всей сборки проекта
 let project_folder = "build"; //Переменная для папки результата проекта, выгружается на сервер и передается заказчику
@@ -54,12 +54,7 @@ let path = {
 		scssCssTask: "/src/css/"
 	}
 }
-// let create = {
-// 		src: {
-// 			scssCssTask: "/src/css/"
-// 		}
-// 	}
-
+// ANCHOR ПЛАГИНЫ:
 const gulp = require('gulp'); //подключение gulp (для использование команд по умолчанию)
 const { src, dest, parallel, series, watch } = require('gulp'); //вспомогательные переменные
 
@@ -100,7 +95,30 @@ const file_plugin = require('gulp-file');
 let $flag_folder;
 let $flag_preloader;
 
-
+// **CSS
+// Порядок Конкатенации файлов Стилей Вендеров и Библиотек
+// в функции cssTask()
+let arrayCssTask = [
+	"vnd/jquery/*.css",
+	"vnd/**/*.css",
+	"libs/**/*.css"
+];
+// Порядок Конкатенации и Минификации файлов style.css и vndLib.css
+// в функции scssCssTask()
+let arrayScssCssTask = [
+	"vndLib.css",
+	"style.css"
+];
+// **JS
+// Порядок Конкатенации JS файлов Вендеров и Библиотек
+// в функции jsTask()
+let arrayJsTask = [
+	"vnd/jquery/*.js",
+	"vnd/**/*.js",
+	"libs/**/*.js",
+	"kscripts.js",
+	"main.js"
+];
 // ANCHOR BrowserSync
 function browserSync(done) {
 	console.log('\n Работает: browserSync()..\n  \n');
@@ -184,11 +202,12 @@ function cssTask() {
 	console.log('\n Работает: cssTask()..\n  \n');
 	return src(path.src.cssTaskSrc, {}) //путь к исходным css файлам
 		.pipe(sourcemaps.init())
-		.pipe(order([
-			"vnd/jquery/*.css",
-			"vnd/**/*.css",
-			"libs/**/*.css"
-		]))
+		// .pipe(order([
+		// 	"vnd/jquery/*.css",
+		// 	"vnd/**/*.css",
+		// 	"libs/**/*.css"
+		// ]))
+		.pipe(order(arrayCssTask))
 		.pipe(concat("vndLib.css"))
 		.pipe(sourcemaps.write())
 		.pipe(dest(path.src.cssTaskDest))
@@ -200,10 +219,11 @@ async function scssCssTask() {
 	return src(path.src.scssCssTaskSrc, {}) //путь к исходным css файлам
 		.pipe(plumber())
 		.pipe(sourcemaps.init())
-		.pipe(order([
-			"vndLib.css",
-			"style.css",
-		]))
+		// .pipe(order([
+		// 	"vndLib.css",
+		// 	"style.css"
+		// ]))
+		.pipe(order(arrayScssCssTask))
 		.pipe(concat("styles.css"))
 		.pipe(
 			autoprefixer({
@@ -235,13 +255,14 @@ function jsTask() {
 	console.log('\n Работает: jsTask()..\n  \n');
 	return src(path.src.jsTask)
 		.pipe(sourcemaps.init())
-		.pipe(order([
-			"vnd/jquery/*.js",
-			"vnd/**/*.js",
-			"libs/**/*.js",
-			"kscripts.js",
-			"main.js"
-		]))
+		// .pipe(order([
+		// 	"vnd/jquery/*.js",
+		// 	"vnd/**/*.js",
+		// 	"libs/**/*.js",
+		// 	"kscripts.js",
+		// 	"main.js"
+		// ]))
+		.pipe(order(arrayJsTask))
 		.pipe(concat("scripts.js"))
 		.pipe(gulp.dest(path.build.js))
 		.pipe(uglify(/* options */))
@@ -496,8 +517,9 @@ function watchFiles() {
 
 // ANCHOR Команды для запуска:
 // build 
-let build = series(cleanBuild, parallel(jsTask, htmlTask, imgTask, f_ttf2woff, vnd_js, vnd_css), cleanSrcCss, fontStyle);
-let watch_build = parallel(build, watchFiles, browserSync);
+// Запускаю команду очистки gulp clean
+let build = series(cleanBuild, parallel(css, jsTask, htmlTask, imgTask, f_ttf2woff, watchFiles, vnd_js, vnd_css), cleanSrcCss);
+let watch_build = parallel(build, browserSync);
 // develop - для работы, чтобы время не тратить на шрифты и картинки, watch долго запускается 
 let develop = series(cleanBuild, (parallel(css, jsTask, htmlTask, imgTask, f_ttf2woff, watchFiles)));
 let watch_develop = parallel(develop, browserSync);
@@ -526,7 +548,7 @@ exports.f_ttf2woff = f_ttf2woff; //запуск команды для шрифт
 exports.woff2build = woff2build;
 exports.fontStyle = fontStyle; //запуск команды подключение шрифтов в файл стилей
 // Сервисные
-exports.clean = clean; // Функция-1.3 - Запуск Удаления директорий - build и src/fonts-woff/
+exports.clean = clean; // Функция-1.3 - Запуск Удаления директорий - build, src/assets/fonts-woff/ и src/css
 exports.cleanBuild = cleanBuild; // Функция-1.1 - Запуск Удаления директории - build
 exports.cleanFontsWoff = cleanFontsWoff; // Функция-1.2 - Запуск удаления директории - src/fonts-woff/
 exports.cleanSrcCss = cleanSrcCss; // Функция-1.3 - Запуск Удаления директорий - src/css/ 
